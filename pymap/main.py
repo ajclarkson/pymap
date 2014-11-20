@@ -36,8 +36,9 @@ class Pymap:
 				host = config.get(account, 'host')
 				username = config.get(account, 'username')
 				password = config.get(account, 'password')
+				email_address = config.get(account, 'email_address')
 			except NoOptionError, e:
-				print "ERROR Parsing Configuration Options for: %s" % account_name
+				print "ERROR Parsing Configuration Options for: %s" % account
 				print " %s" % e
 
 			mail_account = IMAPAccount(account, host, username, password)
@@ -49,12 +50,13 @@ class Pymap:
 				except NoOptionError, e:
 					print "ERROR Parsing Configuration Options for: %s" % account_name
 					print " %s" % e
-
+				personal_name = config.get("config", "name")
 				reply_remind = ReplyReminder(mail_account, followup_folder)
 				if reply_remind.status == "OK":
 					# Folder Found, Process Mailbox
-					reply_remind.process_mailbox(mail_account, followup_folder)
+					reply_remind.process_mailbox(mail_account, followup_folder, email_address, personal_name)
 
+				mail_account.close()
 
 
 def main(argv):

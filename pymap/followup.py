@@ -1,10 +1,11 @@
+from message import MessageBuilder
 import re
 
 class ReplyReminder:
 	def __init__(self, mail_account, followup_folder):
 		self.status, data = mail_account.imap.select(followup_folder)
 
-	def process_mailbox(self, mail_account, followup_folder):
+	def process_mailbox(self, mail_account, followup_folder, email_address,personal_name=""):
 		mail_account.imap.select(followup_folder)
 		status, data = mail_account.imap.search(None, "ALL")
 		if status != "OK":
@@ -25,9 +26,13 @@ class ReplyReminder:
 			references.extend(message_references)
 
 			body = self.fetch_message_part(mail_account, num, '(BODY.PEEK[TEXT])')
+			# If message id appears in previous references, then it is part of a thread
 			if message_id not in references:
 				pending_messages.append({'message_id':message_id, 'header':header, 'body':body})
 
+
+		builder = MessageBuilder()
+		builder.send_followup(pending_messages, mail_account, email_address, personal_name)
 		print "Mailbox %s:%s has %s emails awaiting followup!" % (mail_account.name, followup_folder, str(len(pending_messages)))
 
 
