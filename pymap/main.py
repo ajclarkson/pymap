@@ -1,11 +1,15 @@
 from os.path import expanduser
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, NoOptionError
+from account import IMAPAccount
+from followup import ReplyReminder
 import sys, re
 
 class Pymap:
 	def __init__(self):
-		self.config = self.load_configuration_file()
-		self.account_keys = self.identify_accounts(self.config)
+		config = self.load_configuration_file()
+		account_keys = self.identify_accounts(config)
+
+		self.process_accounts(account_keys, config)
 
 	def load_configuration_file(self):
 		user_home = expanduser("~")
@@ -20,11 +24,37 @@ class Pymap:
 			return parser
 
 	def identify_accounts(self,config):
-		accounts = []
+		account_keys = []
 		for section in config.sections():
 			if "account_" in section:
-				accounts.append(section)
+				account_keys.append(section)
 		return account_keys
+
+	def process_accounts(self, account_keys, config):
+		for account in account_keys:
+			try:
+				host = config.get(account, 'host')
+				username = config.get(account, 'username')
+				password = config.get(account, 'password')
+			except NoOptionError, e:
+				print "ERROR Parsing Configuration Options for: %s" % account_name
+				print " %s" % e
+
+			mail_account = IMAPAccount(account, host, username, password)
+
+			if mail_account.status == "OK":
+				# Mail Account Identified, Login Success
+				try:
+					followup_folder = config.get(account, 'followup_folder')
+				except NoOptionError, e:
+					print "ERROR Parsing Configuration Options for: %s" % account_name
+					print " %s" % e
+
+				reply_remind = ReplyReminder(mail_account, followup_folder)
+				if reply_remind.status == "OK":
+					# Folder Found, Process Mailbox
+					reply_remind.process_mailbox(mail_account, followup_folder)
+
 
 
 def main(argv):
