@@ -7,6 +7,7 @@ class IMAPAccount:
 		self.status = self.connect_to_account(host, username, password)
 
 	def connect_to_account(self, host, username, password):
+		''' Attempts to Connect to specified IMAP Account.'''
 		try:
 			status, data = self.imap.login(username, password)
 			return "OK"
@@ -15,6 +16,7 @@ class IMAPAccount:
 			return "ERROR"
 
 	def close(self):
+		''' Closes imaplib connections.'''
 		self.imap.close()
 		self.imap.logout()
 

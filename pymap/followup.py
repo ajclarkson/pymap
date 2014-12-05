@@ -1,15 +1,27 @@
-from message import MessageBuilder
 import re
 
 class ReplyReminder:
 	def __init__(self, mail_account, followup_folder):
 		self.status, data = mail_account.imap.select(followup_folder)
 
-	def process_mailbox(self, mail_account, followup_folder, email_address,personal_name=""):
+	def process_mailbox(self, mail_account, followup_folder):
+		'''Retrieves and parses all mail in followup folder in preparation for notification email construction.
+
+		All mail retrieved from the named followup_folder, and parsed into header, body, and addressing information.
+		In threaded email conversations, only the latest email is retained all previous ones are ignored.
+		
+		Args:
+			mail_account: IMAPAccount object of the currently active IMAPAccount
+			followup_folder: Named folder to search for email to be processed
+
+
+		Returns:
+			pending_messages: A list of all parsed outstanding messages (in dict format) for notification.
+		''' 
 		mail_account.imap.select(followup_folder)
 		status, data = mail_account.imap.search(None, "ALL")
 		if status != "OK":
-			print "No messages found in %s:%s" % (mail_account.name, followup_folder)
+			print "Error Processing %s:%s" % (mail_account.name, followup_folder)
 			return
 
 		pending_messages = []
@@ -28,18 +40,22 @@ class ReplyReminder:
 				references.extend(message_references)
 
 				body = self.fetch_message_part(mail_account, num, '(BODY.PEEK[TEXT])')
-				# If message id appears in previous references, then it is part of a thread
 				if message_id not in references:
 					pending_messages.append({'message_id':message_id, 'header':header, 'body':body})
 
-
-			builder = MessageBuilder()
-			builder.send_followup(pending_messages, mail_account, email_address, personal_name)
-			print "Mailbox %s:%s has %s emails awaiting followup!" % (mail_account.name, followup_folder, str(len(pending_messages)))
-
+		return pending_messages
 
 
 	def fetch_message_part(self, mail_account, num, search_string):
+		''' Fetches message parts for parsing based on provided search search_string.
+
+		Args:
+			mail_account: IMAPAccount object of the currently active IMAPAccount
+			num: Location of the message in the mailbox
+			search_string: Search command to retrieve desired message part
+		Returns:
+			String containing the requested message data
+		'''
 		status, data = mail_account.imap.fetch(num, search_string)
 		if status == "OK":
 			return data[0][1]
