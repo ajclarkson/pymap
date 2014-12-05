@@ -9,10 +9,10 @@ At present, it focuses on a key area of email processing "Followups"
 
 It's all too easy to forget that you have an email sat waiting for you to reply to it. We've all done it. Personally I started keeping them in a folder called "Pending", but how often do I remember to check that?
 
-**PyMAP ReplyReminder** is designed to interrogate your "Pending" folder and send you a helpful reminder as to how much you are neglecting it. Simply see the instructions below on how to configure with a `~/.pymaprc` file, then schedule pymap to run as a cronjob as often as you would like.
+**PyMAP ReplyReminder** is designed to interrogate your "Pending" folder and send you a helpful reminder as to how much you are neglecting it. Simply see the instructions below on how to configure with a `~/.pymaprc` file, then schedule pymap to run as a cronjob as often as you would like. (The following cron command will also create a log file in your pymap directory, rather than having output emailed to you.)
 
 ```
-50 08 * * * /path/to/repo/pymap/bin/pymap
+50 08 * * * /path/to/repo/pymap/bin/pymap > /path/to/repo/pymap.log
 ```
 
 When it runs, you'll get a friendly reminder of how many emails are in your pending folder, and a random selection of 5 subjects and from addresses to jog your memory. PyMAP ReplyReminder should intelligently ignore messages that are all within one conversation, so you **should** only see the most recent email from that thread. It is still under development, so bear with me if that isn't the case, it's early days!
