@@ -14,26 +14,28 @@ class ReplyReminder:
 
 		pending_messages = []
 		references = []
-		for num in data[0].split():
-			header = self.fetch_message_part(mail_account, num, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM)])')
+		message_ids = data[0].split();
+		if len(message_ids) > 0:
+			for num in message_ids:
+				header = self.fetch_message_part(mail_account, num, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM)])')
 
-			message_references = self.fetch_message_part(mail_account, num, '(BODY.PEEK[HEADER.FIELDS (REFERENCES)])')
-			message_id = self.fetch_message_part(mail_account, num, '(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])')
-			message_id = message_id.split(": ")[1].strip()[1:-1]
+				message_references = self.fetch_message_part(mail_account, num, '(BODY.PEEK[HEADER.FIELDS (REFERENCES)])')
+				message_id = self.fetch_message_part(mail_account, num, '(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])')
+				message_id = message_id.split(": ")[1].strip()[1:-1]
 
-			message_references = re.compile('<(.*?)>').split("".join(message_references.split()))
-			message_references = filter(None, message_references[1:])
-			references.extend(message_references)
+				message_references = re.compile('<(.*?)>').split("".join(message_references.split()))
+				message_references = filter(None, message_references[1:])
+				references.extend(message_references)
 
-			body = self.fetch_message_part(mail_account, num, '(BODY.PEEK[TEXT])')
-			# If message id appears in previous references, then it is part of a thread
-			if message_id not in references:
-				pending_messages.append({'message_id':message_id, 'header':header, 'body':body})
+				body = self.fetch_message_part(mail_account, num, '(BODY.PEEK[TEXT])')
+				# If message id appears in previous references, then it is part of a thread
+				if message_id not in references:
+					pending_messages.append({'message_id':message_id, 'header':header, 'body':body})
 
 
-		builder = MessageBuilder()
-		builder.send_followup(pending_messages, mail_account, email_address, personal_name)
-		print "Mailbox %s:%s has %s emails awaiting followup!" % (mail_account.name, followup_folder, str(len(pending_messages)))
+			builder = MessageBuilder()
+			builder.send_followup(pending_messages, mail_account, email_address, personal_name)
+			print "Mailbox %s:%s has %s emails awaiting followup!" % (mail_account.name, followup_folder, str(len(pending_messages)))
 
 
 
